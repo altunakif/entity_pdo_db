@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require 'entity_pdo.php';
 
 $array = array(baslik=>"'Update Baslik'", icerik=>"'Update icerik'");

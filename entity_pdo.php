@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 class dataBase extends PDO
 {
 	private $table 	;

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require "entity_pdo.php";
 
 $delete = new dataBase();
