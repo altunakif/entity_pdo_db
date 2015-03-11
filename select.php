@@ -27,7 +27,13 @@ $select -> from('haberler')
 		-> having("id < 15")
 		-> orderBy("id DESC")
 		-> limit("0,3")
-		-> run();			
+		-> run();
+		
+$select = new dataBase();
+$select -> from('haberler as h')
+		-> select("h.id, h.baslik, i.ilid, i.Sehir")
+		-> innerJoin("iller as i")
+		-> run();						
 				
 				
 var_dump($select->sql);
