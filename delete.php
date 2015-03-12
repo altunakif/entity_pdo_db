@@ -1,7 +1,7 @@
 <?php
 require "entity_pdo.php";
 
-$delete = new dataBase();
+$delete = new DataBase();
 $delete -> from('haberler')
 		-> delete()
 		-> where ("aid = 55")

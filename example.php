@@ -1,7 +1,7 @@
 <?php
 require "entity_pdo.php";
 
-$exe = new dataBase();
+$exe = new DataBase();
 $exe ->from("haberler")
 	 ->insert(array(baslik=>"'başlık'", icerik=>"'icerik'"))
 	 ->run();

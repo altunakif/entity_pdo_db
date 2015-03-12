@@ -1,5 +1,5 @@
 <?php
-class dataBase extends PDO
+class DataBase extends PDO
 {
 	private $table 	;
 	public 	$sql	;

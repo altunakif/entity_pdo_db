@@ -1,24 +1,24 @@
 <?php
 require 'entity_pdo.php';
 
-$select = new dataBase();
+$select = new DataBase();
 $select -> from('haberler')
 		-> select()
 		-> run();
 		
-$select = new dataBase();
+$select = new DataBase();
 $select -> from('haberler')
 		-> select("id, baslik")
 		-> run();
 		
-$select = new dataBase();
+$select = new DataBase();
 $select -> from('haberler')
 		-> select("*")
 		-> where ("id >5")
 		-> andWhere("id < 8")
 		-> run();	
 		
-$select = new dataBase();
+$select = new DataBase();
 $select -> from('haberler')
 		-> select("*")
 		-> where ("baslik")
@@ -29,7 +29,7 @@ $select -> from('haberler')
 		-> limit("0,3")
 		-> run();
 		
-$select = new dataBase();
+$select = new DataBase();
 $select -> from('haberler as h')
 		-> select("h.id, h.baslik, i.ilid, i.Sehir")
 		-> innerJoin("iller as i")
