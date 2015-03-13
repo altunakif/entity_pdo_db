@@ -1,14 +1,27 @@
 <?php
 class DataBase extends PDO
 {
+	private $host		;
+	private $dbName		;
+	private $username	;
+	private $password	;
+	
 	private $table 		;
 	private $method		;
+	private $columns	;
+	private $column 	;
+	private $set 	    ;
 	public  $bindPar 	;
 	public 	$result		;
 	public 	$sql		;
 	
 	public function __construct($host = 'localhost', $dbname = 'k_dbo', $username = 'root', $password = '')
 	{
+		$this->host 	= $host ;
+		$this->dbName 	= $dbname ;
+		$this->username	= $username ;
+		$this->password	= $password ;
+
 		$dsn	 = "mysql:dbname={$dbname}; host={$host}";
 		$options = array(PDO::ATTR_CASE 				=> PDO::CASE_NATURAL,
         				 PDO::ATTR_ERRMODE 				=> PDO::ERRMODE_SILENT,
@@ -31,12 +44,103 @@ class DataBase extends PDO
 	{
 		try
 		{
+			$column = substr($metot,3);
+			$metot  = substr($metot,0,3);
+			
+			if (strcasecmp($metot, "set")==0)
+			{
+				$this->columns();
+				foreach($this->columns as $row)
+				{
+					if (strcasecmp($row, $column) ==0)
+					{
+						$this->column[$row] = $arg[0];
+						$this->set();
+						return $this;
+					}
+				}
+			} /* if */
+			
+			if (strcasecmp($metot, "get")==0)
+			{
+				$this->columns();
+				foreach($this->columns as $row)
+				{
+					if (strcasecmp($row, $column) ==0)
+					{
+						$this->column[] = $row;
+						$this->get();
+						return $this;
+					}
+				}
+			} /* if */
 		}
 		catch(Exception $e)
 		{
 			echo  "Error : ".$e->getMessage() ."<br/>"."File : ".$e->getFile() . "<br/>"."Line : ".$e->getLine() . "<br/>";
 		}
 	} /* function __call */
+	
+	public function set()
+	{
+		try
+		{
+			$this->set ="";
+		
+			foreach ($this->column as $index => $row)
+			{
+				$this->set 				   .= "{$index} = :{$index}, ";
+				$this->bindPar[":{$index}"] = $row;
+			}
+			
+			$this->set = trim($this->set);
+			$this->set =substr($this->set,0, -1);
+			
+			$this -> sql 	= "UPDATE {$this->table} SET {$this->set}";
+			$this->method 	= "UPDATE";
+			return $this;
+		}
+		catch(Exception $e)
+		{
+			echo  "Error : ".$e->getMessage() ."<br/>"."File : ".$e->getFile() . "<br/>"."Line : ".$e->getLine() . "<br/>";
+		}
+	} /* function set() */
+	
+	public function get()
+	{
+		try
+		{
+			foreach($this->column as $row)
+			{
+				$column .= $row.", ";
+			}
+			
+			$column = trim($column);
+			$column = substr($column, 0, -1);
+			$this -> sql 	= "SELECT {$column} FROM {$this->table}";
+			
+			$this->method 	= "SELECT";
+			return $this;
+		}
+		catch(Exception $e)
+		{
+		}
+	} /* function get() */
+	
+	public function columns()
+	{
+		$dbName = $this->dbName;
+		$table  = $this->table;
+		
+		$query = PDO::query("SELECT `COLUMN_NAME` FROM `information_schema`.`COLUMNS`
+							WHERE TABLE_SCHEMA = '$dbName' AND
+ 							TABLE_NAME = '$table' ORDER BY `ORDINAL_POSITION`");
+							
+		foreach ($query as $row)
+		{
+			$this->columns[] = $row[COLUMN_NAME];
+		}
+	} /* function columns() */
 	
 	public function from($table)
 	{
