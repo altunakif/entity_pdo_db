@@ -1,10 +1,11 @@
 <?php
 class DataBase extends PDO
 {
-	private $table 	;
-	public 	$sql	;
-	private $method	;
-	public 	$result	;
+	private $table 		;
+	private $method		;
+	public  $bindPar 	;
+	public 	$result		;
+	public 	$sql		;
 	
 	public function __construct($host = 'localhost', $dbname = 'k_dbo', $username = 'root', $password = '')
 	{
@@ -65,7 +66,7 @@ class DataBase extends PDO
 		}
 	} /* function get */
 	
-	public function insert($var = null, $val = null)
+	public function insert($var)
 	{
 		try
 		{
@@ -73,8 +74,9 @@ class DataBase extends PDO
 			{
 				foreach($var as $index => $row)
 				{
-					$col .= $index.", ";
-					$val .= $row.", ";
+					$col 							.= $index.", ";
+					$val 							.= ":".$index.", ";
+					$this->bindPar[":{$index}"]      = $row;
 				}
 				$col = trim($col);
 				$val = trim($val);
@@ -84,9 +86,10 @@ class DataBase extends PDO
 			}
 			else
 			{
-				$col = $var;
+				throw new Exception("Hatalı parametre correct use of : ->insert(\$array)");
 			}
 			
+			var_dump($this->bindPar);
 			$this->sql 		= "INSERT INTO $this->table ({$col}) VALUES ({$val})";
 			$this->method	= "INSERT";
 			return $this;
@@ -111,7 +114,7 @@ class DataBase extends PDO
 		}
 	} /* function delete */
   
-  	public function update($var = null)
+  	public function update($var)
 	{
 		try
 		{
@@ -119,17 +122,19 @@ class DataBase extends PDO
 			{
 				foreach($var as $index => $row)
 				{
-					$setr .= $index." = ".$row.", ";
+					$setr 					   .= $index." = ".":".$index.", ";
+					$this->bindPar[":{$index}"] = $row;
 				}
 				$setr = trim($setr);
 				$setr = substr($setr, 0, -1);
 			}
 			else
 			{
-				$setr = $var;
+				throw new Exception("Hatalı parametre correct use of : ->update(\$array)");
 			}
 			
 			$this->sql 		= "UPDATE $this->table SET {$setr}";
+			var_dump($this->sql);
 			$this->method	= "UPDATE";
 			return $this;
 		}
@@ -191,12 +196,21 @@ class DataBase extends PDO
 		}
 	} /* function on */
 	
-	public function where($var)
+	public function where($left, $ope = null, $right = null)
 	{
 		try
 		{
-			$this->sql .= " WHERE ".$var;
-			return $this;
+			if (!is_null($ope) and !is_null($right))
+			{
+				$this->sql 					.= " WHERE {$left}  {$ope} :{$left}";
+				$this->bindPar[":{$left}"]	 = $right;
+				return $this;
+			}
+			else
+			{
+				$this->sql .= " WHERE ".$left;
+				return $this;
+			}
 		}
 		catch(Exception $e)
 		{
@@ -204,11 +218,12 @@ class DataBase extends PDO
 		}
 	} /* function where */
 	
-	public function andWhere($var)
+	public function andWhere($left, $ope = null, $right = null)
 	{
 		try
 		{
-			$this->sql .= " AND ".$var;
+			$this->sql 						.= " AND {$left}  {$ope} :{$left}And";
+			$this->bindPar[":{$left}And"]	 = $right;
 			return $this;
 		}
 		catch(Exception $e)
@@ -217,11 +232,26 @@ class DataBase extends PDO
 		}
 	} /* function andWhere */
 	
+	public function orWhere($left, $ope = null, $right = null)
+	{
+		try
+		{
+			$this->sql 						.= " OR {$left}  {$ope} :{$left}Or";
+			$this->bindPar[":{$left}Or"]	 = $right;
+			return $this;
+		}
+		catch(Exception $e)
+		{
+			echo  "Error : ".$e->getMessage() ."<br/>"."File : ".$e->getFile() . "<br/>"."Line : ".$e->getLine() . "<br/>";
+		}
+	} /* function orWhere */
+	
 	public function like($var)
 	{
 		try
 		{
-			$this->sql .= " LIKE ".$var;
+			$this->sql 				.= " LIKE :like";
+			$this->bindPar[":like"]  = $var;
 			return $this;
 		}
 		catch(Exception $e)
@@ -230,11 +260,11 @@ class DataBase extends PDO
 		}
 	} /* function like */
 	
-	public function orderBy($var)
+	public function orderBy($col = null, $met = null)
 	{
 		try
 		{
-			$this->sql .= " ORDER BY ".$var;
+			$this->sql .= " ORDER BY {$col} {$met}";
 			return $this;
 		}
 		catch(Exception $e)
@@ -256,11 +286,12 @@ class DataBase extends PDO
 		}
 	}/* function groupBy */
 	
-	public function having($var)
+	public function having($left, $ope = null, $right = null)
 	{
 		try
 		{
-			$this->sql .= " HAVING ".$var;
+			$this->sql 						 .= " HAVING {$left} {$ope} :{$left}having";
+			$this->bindPar[":{$left}having"]  = $right;
 			return $this;
 		}
 		catch(Exception $e)
@@ -269,11 +300,13 @@ class DataBase extends PDO
 		}
 	}/* function having */
 	
-	public function limit($var)
+	public function limit($val1, $val2)
 	{
 		try
 		{
-			$this->sql .= " LIMIT ".$var;
+			$this->sql 				.= " LIMIT :val1, :val2";
+			$this->bindPar[":val1"]  = $val1;
+			$this->bindPar[":val2"]  = $val2;
 			return $this;
 		}
 		catch(Exception $e)
@@ -289,7 +322,16 @@ class DataBase extends PDO
 			if ($this->method == "SELECT")
 			{
 				$query = PDO::prepare($this->sql);
-				if(!$query) throw new Exception("SQL hatası : {$this->sql}"); 
+				if(!$query) throw new Exception("SQL hatası : {$this->sql}");
+				
+				if (!empty($this->bindPar))
+				{
+					foreach($this->bindPar as $index => &$row)
+					{
+						$query->bindParam($index, $row);
+					}
+				}
+				
 				$query ->execute();
 				$this->result = $query->fetchAll(PDO::FETCH_ASSOC);
 			}
@@ -298,7 +340,17 @@ class DataBase extends PDO
 			{
 				$query = PDO::prepare($this->sql);
 				if(!$query) throw new Exception("SQL hatası : {$this->sql}");
+				
+				if (!empty($this->bindPar))
+				{
+					foreach($this->bindPar as $index => &$row)
+					{
+						$query->bindParam($index, $row);
+					}
+				}
+				
 				$query ->execute();
+				var_dump($query);
 				if ($query) $this->result = true;
 			}
 			
@@ -306,6 +358,15 @@ class DataBase extends PDO
 			{
 				$query = PDO::prepare($this->sql);
 				if(!$query) throw new Exception("SQL hatası : {$this->sql}");
+				
+				if (!empty($this->bindPar))
+				{
+					foreach($this->bindPar as $index => &$row)
+					{
+						$query->bindParam($index, $row);
+					}
+				}
+				
 				$query ->execute();
 				if ($query) $this->result = true;
 			}
@@ -314,6 +375,15 @@ class DataBase extends PDO
 			{
 				$query = PDO::prepare($this->sql);
 				if(!$query) throw new Exception("SQL hatası : {$this->sql}");
+				
+				if (!empty($this->bindPar))
+				{
+					foreach($this->bindPar as $index => &$row)
+					{
+						$query->bindParam($index, $row);
+					}
+				}
+				
 				$query ->execute();
 				if ($query) $this->result = true;
 			}

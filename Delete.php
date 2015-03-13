@@ -1,10 +1,10 @@
 <?php
-require "entity_pdo.php";
+require "DataBase.php";
 
 $delete = new DataBase();
 $delete -> from('haberler')
 		-> delete()
-		-> where ("aid = 55")
+		-> where ("aid", "=", "36")
 		-> run();
 		
 var_dump($delete->sql);	
