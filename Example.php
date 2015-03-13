@@ -1,5 +1,5 @@
 <?php
-require "entity_pdo.php";
+require "DataBase.php";
 
 $exe = new DataBase();
 $exe ->from("haberler")
