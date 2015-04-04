@@ -176,6 +176,8 @@ class DataBase extends PDO
 		{
 			if (is_array($var))
 			{
+				$col = "";
+				$val = "";
 				foreach($var as $index => $row)
 				{
 					$col 							.= $index.", ";
