@@ -10,9 +10,9 @@ class DataBase extends PDO
 	private $method		;
 	private $columns	;
 	private $column 	;
-	private $set 	    ;
+	private $set 		;
 	public  $bindPar 	;
-	public 	$result		;
+	public 	$query		;
 	public 	$sql		;
 	
 	public function __construct($host = 'localhost', $dbname = 'k_dbo', $username = 'root', $password = '')
@@ -28,7 +28,7 @@ class DataBase extends PDO
         				 PDO::ATTR_ORACLE_NULLS 		=> PDO::NULL_NATURAL,
         				 PDO::ATTR_STRINGIFY_FETCHES	=> false,
         				 PDO::ATTR_EMULATE_PREPARES 	=> false,
-						 PDO::ATTR_DEFAULT_FETCH_MODE 	=> PDO::FETCH_ASSOC,
+						 PDO::ATTR_DEFAULT_FETCH_MODE 	=> PDO::FETCH_OBJ,
 						 PDO::MYSQL_ATTR_INIT_COMMAND 	=> "SET NAMES utf8");
 						 
 		try {
@@ -425,79 +425,42 @@ class DataBase extends PDO
 	{
 		try
 		{
-			if ($this->method == "SELECT")
-			{
-				$query = PDO::prepare($this->sql);
-				if(!$query) throw new Exception("SQL hatası : {$this->sql}");
+			$this->query = PDO::prepare($this->sql);
+				if(!$this->query) throw new Exception("SQL hatası : {$this->sql}");
 				
 				if (!empty($this->bindPar))
 				{
 					foreach($this->bindPar as $index => &$row)
 					{
-						$query->bindParam($index, $row);
+						$this->query->bindParam($index, $row);
 					}
 				}
 				
-				$query ->execute();
-				$this->result = $query->fetchAll(PDO::FETCH_ASSOC);
-			}
-			
-			if ($this->method == "INSERT")
-			{
-				$query = PDO::prepare($this->sql);
-				if(!$query) throw new Exception("SQL hatası : {$this->sql}");
-				
-				if (!empty($this->bindPar))
-				{
-					foreach($this->bindPar as $index => &$row)
-					{
-						$query->bindParam($index, $row);
-					}
-				}
-				
-				$query ->execute();
-				var_dump($query);
-				if ($query) $this->result = true;
-			}
-			
-			if ($this->method == "DELETE")
-			{
-				$query = PDO::prepare($this->sql);
-				if(!$query) throw new Exception("SQL hatası : {$this->sql}");
-				
-				if (!empty($this->bindPar))
-				{
-					foreach($this->bindPar as $index => &$row)
-					{
-						$query->bindParam($index, $row);
-					}
-				}
-				
-				$query ->execute();
-				if ($query) $this->result = true;
-			}
-			
-			if ($this->method == "UPDATE")
-			{
-				$query = PDO::prepare($this->sql);
-				if(!$query) throw new Exception("SQL hatası : {$this->sql}");
-				
-				if (!empty($this->bindPar))
-				{
-					foreach($this->bindPar as $index => &$row)
-					{
-						$query->bindParam($index, $row);
-					}
-				}
-				
-				$query ->execute();
-				if ($query) $this->result = true;
-			}
+			$this->query->execute();
 		}
 		catch(Exception $e)
 		{
 			echo  "Error : ".$e->getMessage() ."<br/>"."File : ".$e->getFile() . "<br/>"."Line : ".$e->getLine() . "<br/>";
 		}
 	} /* function run */
+	
+	public function LastID(){
+		return $this->lastInsertId();
+	}
+	
+	public function results($single = false) {
+		$this->run();
+		if($single){
+			return $this->query->fetch();
+		} else {
+			try {
+				return $this->query->fetchAll();
+			}
+			catch(Exception $e)
+			{
+				echo  "Error : ".$e->getMessage() ."<br/>"."File : ".$e->getFile() . "<br/>"."Line : ".$e->getLine() . "<br/>";
+			}
+		}
+	}
 }
 ?>
