@@ -406,13 +406,13 @@ class DataBase extends PDO
 		}
 	}/* function having */
 	
-	public function limit($val1, $val2)
+	public function limit($limit, $start = 0)
 	{
 		try
 		{
 			$this->sql 				.= " LIMIT :val1, :val2";
-			$this->bindPar[":val1"]  = $val1;
-			$this->bindPar[":val2"]  = $val2;
+			$this->bindPar[":val1"]  = $start;
+			$this->bindPar[":val2"]  = $limit;
 			return $this;
 		}
 		catch(Exception $e)
